@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Org Event Sign-Up Sheet App (v0.1.0)</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --success: #16a34a;
+      --success-bg: #dcfce7;
+      --warning: #d97706;
+      --warning-bg: #fef3c7;
+      --danger: #dc2626;
+      --danger-bg: #fee2e2;
+      --radius: 10px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .header-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .brand h1 { font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
+    .badge-version {
+      font-size: 0.75rem;
+      background: #eff6ff;
+      color: var(--primary);
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+    .brand p { font-size: 0.85rem; color: var(--muted); }
+
+    .container {
+      max-width: 1120px;
+      margin: 1.5rem auto;
+      padding: 0 1.5rem 3rem;
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    @media (max-width: 860px) {
+      .container { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    .card h2 { font-size: 1.05rem; margin-bottom: 0.85rem; }
+
+    .form-group { margin-bottom: 0.85rem; }
+    label { display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 0.3rem; color: #334155; }
+    input, select, textarea {
+      width: 100%;
+      padding: 0.55rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      background: #fff;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.55rem 0.95rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border-radius: 7px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+    }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+    .btn-outline { background: #fff; border-color: var(--border); color: var(--text); }
+    .btn-outline:hover:not(:disabled) { background: #f1f5f9; }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-danger-text { background: transparent; color: var(--danger); padding: 0.3rem 0.5rem; font-size: 0.8rem; }
+    .btn-danger-text:hover { background: var(--danger-bg); }
+    .btn-full { width: 100%; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.85rem;
+      margin-bottom: 1.25rem;
+    }
+    .stat-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.9rem 1rem;
+    }
+    .stat-box .label { font-size: 0.78rem; color: var(--muted); font-weight: 600; text-transform: uppercase; }
+    .stat-box .value { font-size: 1.5rem; font-weight: 700; margin-top: 0.15rem; }
+
+    .events-list { display: grid; gap: 1rem; }
+    .event-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.15rem;
+      transition: border-color 0.15s;
+    }
+    .event-card.active-roster { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1); }
+    .event-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.75rem;
+      margin-bottom: 0.4rem;
+    }
+    .event-title { font-size: 1.05rem; font-weight: 700; }
+    .event-meta { font-size: 0.83rem; color: var(--muted); margin-bottom: 0.65rem; }
+    .event-desc { font-size: 0.88rem; color: #334155; margin-bottom: 0.85rem; }
+
+    .status-pill {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .pill-open { background: var(--success-bg); color: var(--success); }
+    .pill-full { background: var(--danger-bg); color: var(--danger); }
+
+    .capacity-row { margin-bottom: 0.9rem; }
+    .capacity-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+    .progress-track {
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--primary);
+      transition: width 0.25s ease;
+    }
+    .progress-fill.full { background: var(--danger); }
+
+    .event-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+    .roster-section { margin-top: 1.5rem; }
+    .roster-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.85rem;
+    }
+    .roster-controls { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .roster-controls input { width: 210px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    th, td { text-align: left; padding: 0.65rem 0.6rem; border-bottom: 1px solid var(--border); }
+    th { font-size: 0.78rem; text-transform: uppercase; color: var(--muted); background: #f8fafc; }
+
+    .checkin-badge {
+      display: inline-block;
+      padding: 0.18rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge-checked { background: var(--success-bg); color: var(--success); }
+    .badge-registered { background: var(--warning-bg); color: var(--warning); }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 50;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius);
+      max-width: 440px;
+      width: 100%;
+      padding: 1.35rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.9rem;
+    }
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.35rem;
+      cursor: pointer;
+      color: var(--muted);
+    }
+
+    .alert {
+      padding: 0.6rem 0.8rem;
+      border-radius: 7px;
+      font-size: 0.83rem;
+      margin-bottom: 0.85rem;
+      display: none;
+    }
+    .alert.error { display: block; background: var(--danger-bg); color: var(--danger); }
+    .alert.success { display: block; background: var(--success-bg); color: var(--success); }
+
+    .empty-state {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <h1>Org Event Sign-Up Sheet <span class="badge-version">v0.1.0</span></h1>
+        <p>FR-01: Event Capacity Management, Self-Service Sign-Up & Live Check-In</p>
+      </div>
+      <div>
+        <button class="btn btn-outline" id="resetDemoBtn" title="Restore sample events">Reset Demo Data</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <aside class="card">
+      <h2>Create Org Event</h2>
+      <form id="createEventForm">
+        <div class="form-group">
+          <label for="eventTitle">Event Title *</label>
+          <input type="text" id="eventTitle" placeholder="e.g., General Assembly & Tech Talk" required />
+        </div>
+        <div class="form-group">
+          <label for="eventDate">Date & Time *</label>
+          <input type="datetime-local" id="eventDate" required />
+        </div>
+        <div class="form-group">
+          <label for="eventVenue">Venue *</label>
+          <input type="text" id="eventVenue" placeholder="e.g., Student Center Room 302" required />
+        </div>
+        <div class="form-group">
+          <label for="eventCapacity">Maximum Slots (Capacity Cap) *</label>
+          <input type="number" id="eventCapacity" min="1" max="500" value="25" required />
+        </div>
+        <div class="form-group">
+          <label for="eventDesc">Description</label>
+          <textarea id="eventDesc" rows="2" placeholder="Brief agenda or notes for members..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">+ Publish Event</button>
+      </form>
+    </aside>
+
+    <section>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="label">Active Events</div>
+          <div class="value" id="statEvents">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="label">Total Sign-Ups</div>
+          <div class="value" id="statSignups">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="label">Checked In</div>
+          <div class="value" id="statCheckedIn">0</div>
+        </div>
+      </div>
+
+      <div class="events-list" id="eventsList"></div>
+
+      <div class="card roster-section" id="rosterCard" style="display: none;">
+        <div class="roster-header">
+          <div>
+            <h2 id="rosterTitle" style="margin-bottom: 0.15rem;">Event Roster</h2>
+            <p id="rosterSubtitle" style="font-size: 0.82rem; color: var(--muted);"></p>
+          </div>
+          <div class="roster-controls">
+            <input type="text" id="rosterSearch" placeholder="Search name, ID, or role..." />
+            <button class="btn btn-outline" id="exportCsvBtn">Export CSV</button>
+          </div>
+        </div>
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Member Name</th>
+                <th>Student / Member ID</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="rosterTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="signupModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalEventTitle">Sign Up for Event</h3>
+        <button class="close-btn" id="closeModalBtn" aria-label="Close">&times;</button>
+      </div>
+      <div id="signupAlert" class="alert"></div>
+      <form id="signupForm">
+        <input type="hidden" id="signupEventId" />
+        <div class="form-group">
+          <label for="memberName">Full Name *</label>
+          <input type="text" id="memberName" placeholder="e.g., Maria Santos" required />
+        </div>
+        <div class="form-group">
+          <label for="memberId">Student / Member ID * (Duplicate check enabled)</label>
+          <input type="text" id="memberId" placeholder="e.g., 2024-10482" required />
+        </div>
+        <div class="form-group">
+          <label for="memberEmail">Email or Contact</label>
+          <input type="text" id="memberEmail" placeholder="e.g., maria.santos@school.edu" />
+        </div>
+        <div class="form-group">
+          <label for="memberRole">Participation Role *</label>
+          <select id="memberRole">
+            <option value="Participant">Participant</option>
+            <option value="Volunteer">Volunteer</option>
+            <option value="Committee">Committee</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Confirm Sign-Up</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "org_event_signup_v010";
+    let memoryFallback = null;
+
+    const DEFAULT_DATA = {
+      events: [
+        {
+          id: "evt-101",
+          title: "Git & GitHub Workshop for Beginners",
+          date: "2026-11-28T14:00",
+          venue: "IT Building Lab 2",
+          maxSlots: 3,
+          description: "Hands-on session covering branches, pull requests, and open-source collaboration. Capped at 3 demo slots to test full-capacity locking."
+        },
+        {
+          id: "evt-102",
+          title: "2nd Semester General Assembly",
+          date: "2026-12-05T09:00",
+          venue: "University Auditorium",
+          maxSlots: 40,
+          description: "Semester roadmap, committee sign-ups, and community outreach planning."
+        }
+      ],
+      registrations: [
+        {
+          id: "reg-1",
+          eventId: "evt-101",
+          memberName: "Juan Dela Cruz",
+          memberId: "2024-00112",
+          email: "juan@campus.edu",
+          role: "Participant",
+          checkedIn: true
+        },
+        {
+          id: "reg-2",
+          eventId: "evt-101",
+          memberName: "Angela Reyes",
+          memberId: "2024-00489",
+          email: "angela@campus.edu",
+          role: "Volunteer",
+          checkedIn: false
+        }
+      ]
+    };
+
+    function cloneData(obj) {
+      return JSON.parse(JSON.stringify(obj));
+    }
+
+    function loadState() {
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {
+        if (memoryFallback) return cloneData(memoryFallback);
+      }
+      const initial = cloneData(DEFAULT_DATA);
+      saveState(initial);
+      return initial;
+    }
+
+    function saveState(nextState = state) {
+      memoryFallback = cloneData(nextState);
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+      } catch (e) {
+        // Fallback already stored in memoryFallback
+      }
+    }
+
+    let state = loadState();
+    let selectedRosterEventId = (state.events[0] && state.events[0].id) || null;
+
+    function formatDate(dateStr) {
+      if (!dateStr) return "TBA";
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleString(undefined, {
+        month: "short", day: "numeric", year: "numeric",
+        hour: "numeric", minute: "2-digit"
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function render() {
+      const totalEvents = state.events.length;
+      const totalSignups = state.registrations.length;
+      const totalCheckedIn = state.registrations.filter(r => r.checkedIn).length;
+
+      document.getElementById("statEvents").textContent = totalEvents;
+      document.getElementById("statSignups").textContent = totalSignups;
+      document.getElementById("statCheckedIn").textContent = totalCheckedIn;
+
+      const eventsList = document.getElementById("eventsList");
+      if (state.events.length === 0) {
+        eventsList.innerHTML = '<div class="card empty-state">No events published yet. Use the form on the left to create your first org event.</div>';
+        document.getElementById("rosterCard").style.display = "none";
+        return;
+      }
+
+      eventsList.innerHTML = state.events.map(evt => {
+        const regs = state.registrations.filter(r => r.eventId === evt.id);
+        const count = regs.length;
+        const isFull = count >= evt.maxSlots;
+        const pct = Math.min(100, Math.round((count / evt.maxSlots) * 100));
+        const isSelected = evt.id === selectedRosterEventId;
+
+        return `
+          <article class="event-card ${isSelected ? "active-roster" : ""}">
+            <div class="event-top">
+              <div>
+                <div class="event-title">${escapeHtml(evt.title)}</div>
+                <div class="event-meta">${formatDate(evt.date)} &bull; ${escapeHtml(evt.venue)}</div>
+              </div>
+              <span class="status-pill ${isFull ? "pill-full" : "pill-open"}">
+                ${isFull ? "Full" : `${evt.maxSlots - count} Slots Left`}
+              </span>
+            </div>
+            ${evt.description ? `<p class="event-desc">${escapeHtml(evt.description)}</p>` : ""}
+            <div class="capacity-row">
+              <div class="capacity-labels">
+                <span>Registrations: ${count} / ${evt.maxSlots}</span>
+                <span>${pct}% Filled</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill ${isFull ? "full" : ""}" style="width: ${pct}%"></div>
+              </div>
+            </div>
+            <div class="event-actions">
+              <button class="btn btn-primary" onclick="openSignupModal('${evt.id}')" ${isFull ? "disabled" : ""}>
+                ${isFull ? "Event Full" : "Sign Up"}
+              </button>
+              <button class="btn btn-outline" onclick="selectRoster('${evt.id}')">
+                View Roster (${count})
+              </button>
+              <button class="btn btn-danger-text" onclick="deleteEvent('${evt.id}')">Delete</button>
+            </div>
+          </article>
+        `;
+      }).join("");
+
+      renderRoster();
+    }
+
+    function renderRoster() {
+      const rosterCard = document.getElementById("rosterCard");
+      const evt = state.events.find(e => e.id === selectedRosterEventId);
+      if (!evt) {
+        rosterCard.style.display = "none";
+        return;
+      }
+
+      rosterCard.style.display = "block";
+      const query = document.getElementById("rosterSearch").value.trim().toLowerCase();
+      const allRegs = state.registrations.filter(r => r.eventId === evt.id);
+      const checkedCount = allRegs.filter(r => r.checkedIn).length;
+
+      document.getElementById("rosterTitle").textContent = `Roster: ${evt.title}`;
+      document.getElementById("rosterSubtitle").textContent =
+        `${allRegs.length} of ${evt.maxSlots} slots filled • ${checkedCount} checked in`;
+
+      const filtered = allRegs.filter(r =>
+        r.memberName.toLowerCase().includes(query) ||
+        r.memberId.toLowerCase().includes(query) ||
+        r.role.toLowerCase().includes(query)
+      );
+
+      const tbody = document.getElementById("rosterTableBody");
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No registrants match your filter yet.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(reg => `
+        <tr>
+          <td>
+            <strong>${escapeHtml(reg.memberName)}</strong>
+            ${reg.email ? `<div style="font-size:0.78rem;color:var(--muted)">${escapeHtml(reg.email)}</div>` : ""}
+          </td>
+          <td><code>${escapeHtml(reg.memberId)}</code></td>
+          <td>${escapeHtml(reg.role)}</td>
+          <td>
+            <span class="checkin-badge ${reg.checkedIn ? "badge-checked" : "badge-registered"}">
+              ${reg.checkedIn ? "Checked In" : "Registered"}
+            </span>
+          </td>
+          <td>
+            <button class="btn ${reg.checkedIn ? "btn-outline" : "btn-success"}" style="padding:0.3rem 0.6rem;font-size:0.78rem;" onclick="toggleCheckIn('${reg.id}')">
+              ${reg.checkedIn ? "Undo Chec
